@@ -138,4 +138,9 @@
             camera:labelList="@array/pref_camera_beauty_mode_labels"
             camera:entries="@array/pref_switch_entries"
             camera:entryValues="@array/pref_switch_entryvalues" />
+
+     <ListPreference
+            camera:key="pref_camera_storage_key"
+            camera:title="@string/pref_camera_storage_title" />
+
 </PreferenceGroup>

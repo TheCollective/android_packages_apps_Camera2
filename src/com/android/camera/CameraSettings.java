@@ -28,6 +28,9 @@ import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.media.CamcorderProfile;
+import android.os.Environment;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 import android.util.Log;
 
 import com.android.camera.util.ApiHelper;
@@ -73,6 +76,7 @@ public class CameraSettings {
     public static final String KEY_VIDEO_FIRST_USE_HINT_SHOWN = "pref_video_first_use_hint_shown_key";
     public static final String KEY_PHOTOSPHERE_PICTURESIZE = "pref_photosphere_picturesize_key";
     public static final String KEY_STARTUP_MODULE_INDEX = "camera.startup_module";
+    public static final String KEY_STORAGE = "pref_camera_storage_key";
 
     public static final String KEY_VIDEO_ENCODER = "pref_camera_videoencoder_key";
     public static final String KEY_AUDIO_ENCODER = "pref_camera_audioencoder_key";
@@ -300,6 +304,7 @@ public class CameraSettings {
         ListPreference jpegQuality = group.findPreference(KEY_JPEG_QUALITY);
         ListPreference videoSnapSize = group.findPreference(KEY_VIDEO_SNAPSHOT_SIZE);
         ListPreference pictureFormat = group.findPreference(KEY_PICTURE_FORMAT);
+        ListPreference storage = group.findPreference(KEY_STORAGE);
 
         if (!mParameters.isPowerModeSupported() && powerMode != null) {
             removePreference(group, powerMode.getKey());
@@ -382,6 +387,11 @@ public class CameraSettings {
                 !CameraUtil.isSupported(mParameters, "saturation-max")) {
             removePreference(group, saturation.getKey());
         }
+
+        if (storage != null) {
+            buildStorage(group, storage);
+        }
+
     }
 
     private void initPreference(PreferenceGroup group) {
@@ -473,6 +483,41 @@ public class CameraSettings {
             removePreference(group, asd.getKey());
         }
         qcomInitPreferences(group);
+    }
+
+    private void buildStorage(PreferenceGroup group, ListPreference storage) {
+        StorageManager sm = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
+        StorageVolume[] volumes = sm.getVolumeList();
+        List<String> entries = new ArrayList<String>(volumes.length);
+        List<String> entryValues = new ArrayList<String>(volumes.length);
+        int primary = 0;
+
+        for (int i = 0; i < volumes.length; i++) {
+            StorageVolume v = volumes[i];
+            //Hide unavailable volumes
+            if (sm.getVolumeState(v.getPath()).equals(Environment.MEDIA_MOUNTED)) {
+                entries.add(v.getDescription(mContext));
+                entryValues.add(v.getPath());
+                if (v.isPrimary()) {
+                    primary = i;
+                }
+            }
+        }
+
+        if (entries.size() < 2) {
+            // No need for storage setting
+            removePreference(group, storage.getKey());
+            return;
+        }
+
+        storage.setEntries(entries.toArray(new String[entries.size()]));
+        storage.setEntryValues(entryValues.toArray(new String[entryValues.size()]));
+
+        // Filter saved invalid value
+        if (storage.findIndexOfValue(storage.getValue()) < 0) {
+            // Default to the primary storage
+            storage.setValueIndex(primary);
+        }
     }
 
     private void buildExposureCompensation(

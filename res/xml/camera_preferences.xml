@@ -262,4 +262,8 @@
             camera:labelList="@array/pref_camera_asd_labels"
             camera:entryValues="@array/pref_switch_entryvalues" />
 
+     <ListPreference
+            camera:key="pref_camera_storage_key"
+            camera:title="@string/pref_camera_storage_title" />
+
 </PreferenceGroup>

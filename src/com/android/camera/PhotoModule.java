@@ -419,6 +419,9 @@ public class PhotoModule
                     break;
                }
                case SET_PHOTO_UI_PARAMS: {
+                    if (mActivity.setStoragePath(mPreferences)) {
+                        mActivity.updateStorageSpaceAndHint();
+                    }
                     setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
                     mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
                         mPreferences);
@@ -473,6 +476,9 @@ public class PhotoModule
 
         mPreferences.setLocalId(mActivity, mCameraId);
         CameraSettings.upgradeLocalPreferences(mPreferences.getLocal());
+
+        mActivity.setStoragePath(mPreferences);
+
         // we need to reset exposure for the preview
         resetExposureCompensation();
 
@@ -742,7 +748,7 @@ public class PhotoModule
         queue.addIdleHandler(new MessageQueue.IdleHandler() {
             @Override
             public boolean queueIdle() {
-                Storage.ensureOSXCompatible();
+                Storage.getInstance().ensureOSXCompatible();
                 return false;
             }
         });
@@ -903,7 +909,7 @@ public class PhotoModule
                 return;
             }
 
-            String dstPath = Storage.DIRECTORY;
+            String dstPath = Storage.getInstance().generateDirectory();
             File sdCard = android.os.Environment.getExternalStorageDirectory();
             File dstFile = new File(dstPath);
             if (dstFile == null) {
@@ -2627,6 +2633,9 @@ public class PhotoModule
          * executed till now, then schedule these functionality for
          * later by posting a message to the handler */
         if (mUI.mMenuInitialized) {
+            if (mActivity.setStoragePath(mPreferences)) {
+                mActivity.updateStorageSpaceAndHint();
+            }
             setCameraParametersWhenIdle(UPDATE_PARAM_PREFERENCE);
             mUI.updateOnScreenIndicators(mParameters, mPreferenceGroup,
                 mPreferences);
