@@ -1366,6 +1366,11 @@ public class CameraActivity extends Activity
             mDataAdapter.flush();
             mDataAdapter.requestLoad(getContentResolver());
         }
+
+        // Update the gallery app
+        Intent intent = new Intent("com.android.gallery3d.STORAGE_CHANGE");
+        intent.putExtra(CameraSettings.KEY_STORAGE, storagePath);
+        sendBroadcast(intent);
         return true;
     }
 
